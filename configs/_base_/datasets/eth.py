@@ -1,0 +1,32 @@
+train_dataloader=dict(
+    batch_size=4,
+    num_workers=4,
+    # num_workers=2,
+    dataset=dict(
+        type='ETHDataset',
+        mode='train',
+        split='/ibex/ai/home/liz0l/codes/datasets/eth3d/train.txt',
+        min_depth=1e-3,
+        max_depth=80,
+        transform_cfg=dict(
+            degree=1.0,
+            random_crop=True,
+            random_crop_size=[540, 960],
+            input_size_shallow=[2160, 3840],
+            input_size_deep=[384, 512])))
+
+val_dataloader=dict(
+    batch_size=1,
+    num_workers=1,
+    dataset=dict(
+        type='ETHDataset',
+        mode='infer',
+        split='/ibex/ai/home/liz0l/codes/datasets/eth3d/test.txt',
+        crop_strategy='16patches',
+        min_depth=1e-3,
+        max_depth=80,
+        transform_cfg=dict(
+            degree=1.0,
+            input_size_shallow=[2160, 3840],
+            input_size_deep=[384, 512])))
+
