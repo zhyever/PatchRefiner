@@ -53,7 +53,7 @@ Unzip the file and make sure you have the `work_dir` folder in this repo after t
 To execute user inference, use the following command:
 
 ```bash
-python run.py ${CONFIG_FILE} --ckp-path <checkpoints> --cai-mode <m1 | m2 | rn> --cfg-option general_dataloader.dataset.rgb_image_dir='<img-directory>' [--save] --work-dir <output-path> --test-type general [--gray-scale] --image-raw-shape [h w] --patch-split-num [h, w]
+python tools/test.py ${CONFIG_FILE} --ckp-path <checkpoints> --cai-mode <m1 | m2 | rn> --cfg-option general_dataloader.dataset.rgb_image_dir='<img-directory>' [--save] --work-dir <output-path> --test-type general [--gray-scale] --image-raw-shape [h w] --patch-split-num [h, w]
 ```
 Arguments Explanation (More details can be found [here](https://github.com/zhyever/PatchFusion/blob/main/docs/user_infer.md)):
 - `${CONFIG_FILE}`: Select the configuration file from the following options based on the inference type you want to run:
