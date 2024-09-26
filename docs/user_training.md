@@ -50,10 +50,11 @@ monocular-depth-estimation-toolbox
 │   │   │   ├── leftImg8bit
 │   │   ├── gtFine
 │   │   ├── leftImg8bit
-
+|   |   ├── train.txt
+|   |   ├── val.txt
 ```
 
-For CityScapes, please download the dataset from the offical website. Note that we also use the extra dataset to train our models. The data structure is presented above.
+For CityScapes, please download the dataset from the offical website. Note that we also use the extra dataset to train our models. The data structure is presented above. Check the split file [here](https://github.com/zhyever/PatchRefiner/issues/5)
 
 ## Pre-trained Model Preparation:
 
@@ -84,11 +85,11 @@ You will see examples in the following sections.
 
 Training PatchRefiner includes two steps.
 
-#### Coarse Model Training
+#### 1 Coarse Model Training
 
 We provide the pretrained coarse model at `work_dir/zoedepth/u4k/coarse_pretrain/checkpoint_24.pth`. Check [here](https://github.com/zhyever/PatchFusion/blob/main/docs/user_training.md#coarse-model-training) in case you want to train a coarse model by yourself.
 
-#### Refiner Model Training
+#### 2 Refiner Model Training
 
 Then, run:
 ``` bash
@@ -99,20 +100,33 @@ Note that the result will over-write the downloaded checkpoint at `work_dir/zoed
 
 ### CityScapes Training (Real Dataset)
 
-There are also two steps for this training.
+There are also several steps for this training.
 
-#### Coarse Model Training
+#### 1 Coarse Model Training
 
-We provide the pretrained coarse model at `work_dir/zoedepth/cs/coarse_pretrain/checkpoint_05.pth`. Check [here](https://github.com/zhyever/PatchFusion/blob/main/docs/user_training.md#coarse-model-training) in case you want to train a coarse model by yourself.
+We provide the pretrained coarse model on cityscapes at `work_dir/zoedepth/cs/coarse_pretrain/checkpoint_05.pth`. Check [here](https://github.com/zhyever/PatchFusion/blob/main/docs/user_training.md#coarse-model-training) in case you want to train a coarse model by yourself.
 
-#### Refiner Model Training
+#### 2 Refiner Model Training
 
-Then, run:
+Then, we need to train a patchrefiner model on cityscapes. One pretrained checkpoint is provided at `work_dir/zoedepth/cs/pr/checkpoint_05.pth`. Consider using `./configs/patchrefiner_zoedepth/pr_cs.py` as the config to train the model. The command is
+
+``` bash
+bash ./tools/dist_train.sh configs/patchrefiner_zoedepth/pr_cs.py 4 --work-dir ./work_dir/zoedepth/cs --log-name pr --tag pr
+```
+
+Note that the result will over-write the downloaded checkpoint at `work_dir/zoedepth/cs/pr/checkpoint_05.pth`.
+
+
+#### 3 Refiner Model Finetuning
+
+Then, we use the proposed framework to finetune the patchrefiner. Run the command:
 ``` bash
 bash ./tools/dist_train.sh configs/patchrefiner_zoedepth_online_pesudo/pr_ssi_midas_cs.py 4 --work-dir ./work_dir/zoedepth/cs --log-name ssi_7e-2 --tag pr --cfg-options model.edge_loss_weight=7e-2
 ```
 
 Note that the result will over-write the downloaded checkpoint at `work_dir/zoedepth/cs/ssi_7e-2/checkpoint_02.pth`.
+
+Use `configs/patchrefiner_zoedepth_online_pesudo/pr_ranking_cs.py` and `configs/patchrefiner_zoedepth_online_pesudo/pr_ssi_midas_cs.py` as the config to adopt the ranking and ssi loss for training, respectively. `configs/patchrefiner_zoedepth_online_pesudo/pr_mix_cs.py` is the mixed version.
 
 ## Model Inference:
 
@@ -134,10 +148,21 @@ bash ./tools/dist_test.sh configs/patchrefiner_zoedepth/pr_cs.py 4 --ckp-path wo
 
 - Note that the current precision and recall are slight different from the ones reported in our paper. The reason is that we used different ways to extract boundaries at that time. For a fair comparison, we aligned it with the implementation in the [MDE challenge](https://jspenmar.github.io/MDEC/).
 
-- Note that the current `EdgeComp` has a magnitude gas compared with the one reported in our paper. The reason is that we only considered real edges close enough to predicted ones at that time. However, it is different from the [MDE challenge](https://jspenmar.github.io/MDEC/)'s implementation. Now, we align the metric with the one used in the [MDE challenge](https://jspenmar.github.io/MDEC/).
+- Note that the current `EdgeComp` has a magnitude gap compared with the one reported in our paper. The reason is that we only considered real edges close enough to predicted ones at that time. However, it is different from the [MDE challenge](https://jspenmar.github.io/MDEC/)'s implementation. Now, we align the metric with the one used in the [MDE challenge](https://jspenmar.github.io/MDEC/).
 
 - For the cityscapes dataset, we use a larger depth range from 0 to 250m instead of the original 0 to 80m in our paper, as there would be too many boundaries masked out in the 0 to 80m setting.
 
-- The results are ploted on figures. Both ranking loss and ssi loss work well on transfering the detailed knowledge. However, the ssi loss outperforms the ranking loss with a small margin. 
+- The results are ploted on figures. Both ranking loss and ssi loss work well on transfering the detailed knowledge. However, the ssi loss outperforms the ranking loss with a small margin. Based on this, there is no need to combine these two losses since the ssi loss is always the better choice.
 
 ![Figure 1: Description of Figure 1](../assets/results.png)
+
+### Updated Performance Table
+
+| Method  |  Data |  Acc1 | REL  | RMSE  | EdgeAcc | EdgeComp  | F1  |
+|---|---|---|---|---|---|---|---|
+| Zoe |  cs | 92.214  | 0.081  | 9.097  | 3.62  | 42.18  | 19.15 |
+| Zoe+Ft  | u4k+cs  | 92.249  | 0.081  | 9.092  | 3.61  | 38.69  | 20.02 |
+| PR (zero-shot)  | u4k  | 3.630  | 0.436  | 24.506  |  3.25  | 9.16  | 31.10 |
+| PR | cs  | 93.295  | 0.076  | 8.324 | 3.39  | 22.14  | 26.99 |
+| PR + ranking| u4k+cs | 93.308  | 0.076  |  8.313 | 3.28 | 17.65  | 29.53  |
+| PR + SSI| u4k+cs | 93.300 | 0.075  | 8.313  | 3.25 | 17.11  |  30.02 |
