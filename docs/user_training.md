@@ -152,7 +152,7 @@ bash ./tools/dist_test.sh configs/patchrefiner_zoedepth/pr_cs.py 4 --ckp-path wo
 
 - For the cityscapes dataset, we use a larger depth range from 0 to 250m instead of the original 0 to 80m in our paper, as there would be too many boundaries masked out in the 0 to 80m setting.
 
-- The results are ploted on figures. Both ranking loss and ssi loss work well on transfering the detailed knowledge. However, the ssi loss outperforms the ranking loss with a small margin. Based on this, there is no need to combine these two losses since the ssi loss is always the better choice.
+- The results are ploted on figures. Each point indicates one experiment with different loss weights (gradually increasing). Both ranking loss and ssi loss work well on transfering the detailed knowledge. However, the ssi loss outperforms the ranking loss with a small margin.
 
 ![Figure 1: Description of Figure 1](../assets/results.png)
 
