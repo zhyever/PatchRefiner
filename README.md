@@ -60,8 +60,9 @@ Arguments Explanation (More details can be found [here](https://github.com/zhyev
     - `configs/patchrefiner_zoedepth/pr_u4k.py` for PatchRefiner based on ZoeDepth and trained on the Unreal4KDataset (Synthetic Data).
     - `configs/patchrefiner_zoedepth/pr_cs.py` for PatchRefiner based on ZoeDepth and trained on the Unreal4KDataset (Synthetic Data) and CityScapesDataset (Real Data).
 - `--ckp-path`: Specify the checkpoint path.
-    - `work_dir/zoedepth/cs/pr/checkpoint_05.pth` for PatchRefiner based on ZoeDepth and trained on the Unreal4KDataset.
-    - `work_dir/zoedepth/cs/ssi_7e-2/checkpoint_02.pth` for PatchRefiner based on ZoeDepth and trained on the Unreal4KDataset and CityScapesDataset (Real Data).
+    - `work_dir/zoedepth/u4k/pr/checkpoint_36.pth` for PatchRefiner based on ZoeDepth and trained on the Unreal4KDataset.
+    - `work_dir/zoedepth/cs/pr/checkpoint_05.pth` for PatchRefiner based on ZoeDepth and trained on the Unreal4KDataset and CityScapesDataset (Real Data). This is the model trained without the DSD loss.
+    - `work_dir/zoedepth/cs/ssi_7e-2/checkpoint_02.pth` for PatchRefiner based on ZoeDepth and trained on the Unreal4KDataset and CityScapesDataset (Real Data). This is the model trained with the DSD loss.
 - `--cai-mode`: Define the specific mode to use. For example, rn indicates n patches in mode r.
 - `--cfg-option`: Specify the input image directory. Maintain the prefix as it indexes the configuration. (To learn more about this, please refer to [MMEngine](https://mmengine.readthedocs.io/en/latest/advanced_tutorials/config.html). Basically, we use MMEngine to organize the configurations of this repo).
 - `--save`: Enable the saving of output files to the specified `--work-dir` directory (Make sure using it, otherwise there will be nothing saved).
@@ -73,9 +74,9 @@ Arguments Explanation (More details can be found [here](https://github.com/zhyev
 ### Example Usage:
 Below is an example command that demonstrates how to run the inference process:
 ```bash
-python ./tools/test.py configs/patchrefiner_zoedepth/pr_u4k.py --ckp-path work_dir/zoedepth/cs/pr/checkpoint_05.pth --cai-mode r32 --cfg-option general_dataloader.dataset.rgb_image_dir='./examples/' --save --work-dir ./work_dir/predictions --test-type general --image-raw-shape 1080 1920 --patch-split-num 2 2
+python ./tools/test.py configs/patchrefiner_zoedepth/pr_u4k.py --ckp-path work_dir/zoedepth/u4k/pr/checkpoint_36.pth --cai-mode r32 --cfg-option general_dataloader.dataset.rgb_image_dir='./examples/' --save --work-dir ./work_dir/predictions --test-type general --image-raw-shape 1080 1920 --patch-split-num 2 2
 ```
-This example performs inference using the `pr_u4k.py` configuration, loads the specified checkpoint `work_dir/zoedepth/cs/pr/checkpoint_05.pth`, sets the PatchRefiner mode to `r32`, specifies the input image directory `./examples/`, and saves the output to ./work_dir/predictions `./work_dir/predictions`. The original dimensions of the input image is `1080x1920` and the input image is divided into `2x2` patches.
+This example performs inference using the `pr_u4k.py` configuration, loads the specified checkpoint `work_dir/zoedepth/u4k/pr/checkpoint_36.pth`, sets the PatchRefiner mode to `r32`, specifies the input image directory `./examples/`, and saves the output to ./work_dir/predictions `./work_dir/predictions`. The original dimensions of the input image is `1080x1920` and the input image is divided into `2x2` patches.
 
 ## **User Training**
 

@@ -339,7 +339,7 @@ class PatchRefiner(BaselinePretrain, PyTorchModelHubMixin):
                 'coarse_prediction': coarse_prediction,
                 'coarse_features': coarse_features,}
 
-            blur_mask = generatemask((self.patch_process_shape[0], self.patch_process_shape[1])) + 1e-3
+            blur_mask = generatemask((self.patch_process_shape[0], self.patch_process_shape[1]), border=0.15)
             blur_mask = torch.tensor(blur_mask, device=image_hr.device)
             avg_depth_map = self.regular_tile(
                 offset=[0, 0], 
@@ -366,7 +366,7 @@ class PatchRefiner(BaselinePretrain, PyTorchModelHubMixin):
                     init_flag=False, image_hr=image_hr[0], tile_temp=tile_temp, blur_mask=blur_mask, avg_depth_map=avg_depth_map, tile_cfg=tile_cfg, process_num=process_num)
                 
             if cai_mode[0] == 'r':
-                blur_mask = generatemask((tile_cfg['patch_raw_shape'][0], tile_cfg['patch_raw_shape'][1])) + 1e-3
+                blur_mask = generatemask((tile_cfg['patch_raw_shape'][0], tile_cfg['patch_raw_shape'][1]), border=0.15) + 1e-3
                 blur_mask = torch.tensor(blur_mask, device=image_hr.device)
                 avg_depth_map.resize(tile_cfg['image_raw_shape'])
                 patch_num = int(cai_mode[1:]) // process_num
@@ -374,14 +374,11 @@ class PatchRefiner(BaselinePretrain, PyTorchModelHubMixin):
                     avg_depth_map = self.random_tile(
                         image_hr=image_hr[0], tile_temp=tile_temp, blur_mask=blur_mask, avg_depth_map=avg_depth_map, tile_cfg=tile_cfg, process_num=process_num)
 
-            depth = avg_depth_map.average_map
+            # depth = avg_depth_map.average_map
+            depth = avg_depth_map.get_avg_map()
             depth = depth.unsqueeze(dim=0).unsqueeze(dim=0)
 
             return depth, \
                 {'rgb': image_lr, 
                  'depth_pred': depth, 
-                 'depth_gt': depth_gt, 
-                 'uncertainty': avg_depth_map.uncertainty_map.unsqueeze(dim=0).unsqueeze(dim=0),
-                 'count_map': avg_depth_map.count_map_raw.unsqueeze(dim=0).unsqueeze(dim=0)}
-            # return coarse_prediction, {'rgb': image_lr, 'depth_pred': coarse_prediction, 'depth_gt': depth_gt}
-        
+                 'depth_gt': depth_gt, }

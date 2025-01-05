@@ -210,14 +210,10 @@ class BaselinePretrain(nn.Module):
                 temp_depth = predictions[patch_select_idx]
                 
                 count_map = torch.zeros(tile_cfg['image_raw_shape'], device=temp_depth.device)
-                count_map_raw = count_map
                 pred_depth = torch.zeros(tile_cfg['image_raw_shape'], device=temp_depth.device)
-                pred_depth_raw = pred_depth
                 count_map[h_start: h_start+tile_cfg['patch_raw_shape'][0], w_start: w_start+tile_cfg['patch_raw_shape'][1]] = blur_mask
-                count_map_raw[h_start: h_start+tile_cfg['patch_raw_shape'][0], w_start: w_start+tile_cfg['patch_raw_shape'][1]] = 1
-                pred_depth[h_start: h_start+tile_cfg['patch_raw_shape'][0], w_start: w_start+tile_cfg['patch_raw_shape'][1]] = temp_depth * blur_mask
-                pred_depth_raw[h_start: h_start+tile_cfg['patch_raw_shape'][0], w_start: w_start+tile_cfg['patch_raw_shape'][1]] = temp_depth
-                avg_depth_map.update(pred_depth.detach().cpu(), count_map.detach().cpu(), pred_depth_raw.detach().cpu(), count_map_raw.detach().cpu())
+                pred_depth[h_start: h_start+tile_cfg['patch_raw_shape'][0], w_start: w_start+tile_cfg['patch_raw_shape'][1]] = temp_depth
+                avg_depth_map.update(pred_depth.detach().cpu(), count_map.detach().cpu())
                     
                 patch_select_idx += 1
         
@@ -322,18 +318,14 @@ class BaselinePretrain(nn.Module):
                 
                 if init_flag:
                     count_map[h_start: h_start+self.patch_process_shape[0], w_start: w_start+self.patch_process_shape[1]] = blur_mask
-                    pred_depth[h_start: h_start+self.patch_process_shape[0], w_start: w_start+self.patch_process_shape[1]] = temp_depth * blur_mask
+                    pred_depth[h_start: h_start+self.patch_process_shape[0], w_start: w_start+self.patch_process_shape[1]] = temp_depth
             
                 else:
                     count_map = torch.zeros(tile_cfg['patch_reensemble_shape'], device=temp_depth.device)
-                    count_map_raw = count_map
                     pred_depth = torch.zeros(tile_cfg['patch_reensemble_shape'], device=temp_depth.device)
-                    pred_depth_raw = pred_depth
                     count_map[h_start: h_start+self.patch_process_shape[0], w_start: w_start+self.patch_process_shape[1]] = blur_mask
-                    count_map_raw[h_start: h_start+self.patch_process_shape[0], w_start: w_start+self.patch_process_shape[1]] = 1
-                    pred_depth[h_start: h_start+self.patch_process_shape[0], w_start: w_start+self.patch_process_shape[1]] = temp_depth * blur_mask
-                    pred_depth_raw[h_start: h_start+self.patch_process_shape[0], w_start: w_start+self.patch_process_shape[1]] = temp_depth
-                    avg_depth_map.update(pred_depth.detach().cpu(), count_map.detach().cpu(), pred_depth_raw.detach().cpu(), count_map_raw.detach().cpu())
+                    pred_depth[h_start: h_start+self.patch_process_shape[0], w_start: w_start+self.patch_process_shape[1]] = temp_depth
+                    avg_depth_map.update(pred_depth.detach().cpu(), count_map.detach().cpu())
                     
                 patch_select_idx += 1
         
@@ -385,7 +377,7 @@ class BaselinePretrain(nn.Module):
                 
                 assert image_hr.shape[0] == 1
             
-                blur_mask = generatemask((self.patch_process_shape[0], self.patch_process_shape[1])) + 1e-3
+                blur_mask = generatemask((self.patch_process_shape[0], self.patch_process_shape[1]), border=0.15)
                 blur_mask = torch.tensor(blur_mask, device=image_hr.device)
                 avg_depth_map = self.regular_tile(
                     offset=[0, 0], 
@@ -412,7 +404,7 @@ class BaselinePretrain(nn.Module):
                         init_flag=False, image_hr=image_hr[0], tile_temp=None, blur_mask=blur_mask, avg_depth_map=avg_depth_map, tile_cfg=tile_cfg, process_num=process_num)
                     
                 if cai_mode[0] == 'r':
-                    blur_mask = generatemask((tile_cfg['patch_raw_shape'][0], tile_cfg['patch_raw_shape'][1])) + 1e-3
+                    blur_mask = generatemask((tile_cfg['patch_raw_shape'][0], tile_cfg['patch_raw_shape'][1]), border=0.15) + 1e-3
                     blur_mask = torch.tensor(blur_mask, device=image_hr.device)
                     avg_depth_map.resize(tile_cfg['image_raw_shape'])
                     patch_num = int(cai_mode[1:])
